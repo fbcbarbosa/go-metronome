@@ -175,7 +175,7 @@ var _ = Describe("Jobs", func() {
 				},
 				Run: &Run{
 					Artifacts: []Artifact{
-						Artifact{URI: "http://foo.test.com/application.zip", Extract: true, Executable: true, Cache: false},
+						{URI: "http://foo.test.com/application.zip", Extract: true, Executable: true, Cache: false},
 					},
 					Cmd: "nuke --dry --master local",
 					Args: []string{
@@ -197,14 +197,14 @@ var _ = Describe("Jobs", func() {
 					MaxLaunchDelay: 3600,
 					Placement: &Placement{
 						Constraints: []Constraint{
-							Constraint{Attribute: "rack", Operator: EQ, Value: "rack-2"}},
+							{Attribute: "rack", Operator: EQ, Value: "rack-2"}},
 					},
 					Restart: &Restart{
 						ActiveDeadlineSeconds: 120, Policy: "NEVER",
 					},
 					User: "root",
 					Volumes: []Volume{
-						Volume{Mode: RW, HostPath: "/etc/guest", ContainerPath: "/mnt/test"},
+						{Mode: RW, HostPath: "/etc/guest", ContainerPath: "/mnt/test"},
 					},
 				},
 			}))

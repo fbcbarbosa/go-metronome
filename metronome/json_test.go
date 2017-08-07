@@ -57,15 +57,15 @@ var _ = Describe("JSON rendering", func() {
 			"local",
 		}).SetCmd("nuke --dry --master local").SetPlacement(&Placement{
 			Constraints: []Constraint{
-				Constraint{Attribute: "rack", Operator: EQ, Value: "rack-2"}},
+				{Attribute: "rack", Operator: EQ, Value: "rack-2"}},
 		}).SetArtifacts([]Artifact{
-			Artifact{URI: "http://foo.test.com/application.zip", Extract: true, Executable: true, Cache: false},
+			{URI: "http://foo.test.com/application.zip", Extract: true, Executable: true, Cache: false},
 		}).SetMaxLaunchDelay(
 			3600,
 		).SetRestart(&Restart{
 			ActiveDeadlineSeconds: 120, Policy: "NEVER",
 		}).SetVolumes([]Volume{
-			Volume{Mode: RW, HostPath: "/etc/guest", ContainerPath: "/mnt/test"},
+			{Mode: RW, HostPath: "/etc/guest", ContainerPath: "/mnt/test"},
 		}).SetUser("root")
 
 		job, err6 := NewJob("prod.example.app", "Example Application", Labels{"location": "olympus", "owner": "zeus"}, runnable)
