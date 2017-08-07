@@ -1,8 +1,10 @@
 package cli
+
 import (
-	"flag"
-	log "github.com/behance/go-logrus"
 	"errors"
+	"flag"
+
+	log "github.com/behance/go-logrus"
 )
 
 // Lightweight types for integrating with flags Value interface
@@ -18,6 +20,7 @@ func (id *JobID) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	flags.StringVar((*string)(id), "job-id", "", "Job Id")
 	return flags
 }
+
 // Validate - validate state usually done as the last part of flag parsing
 func (id *JobID) Validate() error {
 	log.Debugf("JobId.Validate\n")
@@ -35,6 +38,7 @@ func (id *SchedID) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	flags.StringVar((*string)(id), "sched-id", "", "Schedule Id")
 	return flags
 }
+
 // Validate - make sure that the flag was set
 func (id *SchedID) Validate() error {
 	if string(*id) == "" {
@@ -42,6 +46,7 @@ func (id *SchedID) Validate() error {
 	}
 	return nil
 }
+
 // RunID - is used in several REST calls
 type RunID string
 
@@ -50,6 +55,7 @@ func (id *RunID) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	flags.StringVar((*string)(id), "run-id", "", "Run Id")
 	return flags
 }
+
 // Validate - that run-id has a non-zero length value
 func (id *RunID) Validate() error {
 	if string(*id) == "" {
@@ -57,4 +63,3 @@ func (id *RunID) Validate() error {
 	}
 	return nil
 }
-

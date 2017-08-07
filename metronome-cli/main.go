@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	log "github.com/behance/go-logrus"
 	"os"
 	"strings"
+
+	log "github.com/behance/go-logrus"
 	//"errors"
 	"encoding/json"
+
 	cli "github.com/adobe-platform/go-metronome/metronome-cli/cli_support"
 )
 
@@ -17,11 +19,11 @@ var commands commandMap
 // initialize the top level command map
 func init() {
 	commands = commandMap{
-		"job": cli.CommandParse(new(cli.JobTopLevel)),
-		"run": cli.CommandParse(new(cli.RunsTopLevel)),
+		"job":      cli.CommandParse(new(cli.JobTopLevel)),
+		"run":      cli.CommandParse(new(cli.RunsTopLevel)),
 		"schedule": cli.CommandParse(new(cli.SchedTopLevel)),
-		"metrics": cli.CommandParse(new(cli.Metrics)),
-		"ping": cli.CommandParse(new(cli.Ping)),
+		"metrics":  cli.CommandParse(new(cli.Metrics)),
+		"ping":     cli.CommandParse(new(cli.Ping)),
 	}
 }
 
@@ -35,7 +37,6 @@ func usage(msg string) {
 		"schedule",
 		"metrics",
 		"ping",
-
 	}
 	fmt.Fprintf(os.Stderr, `USAGE
 
@@ -43,7 +44,7 @@ func usage(msg string) {
 
 COMMANDS:
 	 `, os.Args[0], strings.Join(options, "|"))
-	fmt.Fprintln(os.Stderr,"")
+	fmt.Fprintln(os.Stderr, "")
 	for _, action := range options {
 		commands[action].Usage(os.Stderr)
 	}
@@ -97,7 +98,7 @@ func main() {
 		}
 		var executorArgs []string
 		if len(os.Args) > (index + 1) {
-			executorArgs = os.Args[index + 1:]
+			executorArgs = os.Args[index+1:]
 		}
 		log.Debugf("executorArgs %+v", executorArgs)
 		if action == "help" {
@@ -110,21 +111,21 @@ func main() {
 			} else {
 				log.Debugf("Result type: %T", result)
 
-				switch result.(type){
+				switch result.(type) {
 				case json.RawMessage:
 					var f interface{}
 					by := result.(json.RawMessage)
 					if err := json.Unmarshal(by, &f); err != nil {
 						log.Infof(string(by))
 					} else {
-						if b2, err2 := json.MarshalIndent(f,"","  "); err2 != nil {
+						if b2, err2 := json.MarshalIndent(f, "", "  "); err2 != nil {
 							log.Infof(string(by))
 						} else {
 							log.Infof(string(b2))
 						}
 					}
 				default:
-					if bb, err7 := json.MarshalIndent(result,"", "  "); err7 == nil {
+					if bb, err7 := json.MarshalIndent(result, "", "  "); err7 == nil {
 						log.Infof("result %s\n", (string(bb)))
 					}
 				}

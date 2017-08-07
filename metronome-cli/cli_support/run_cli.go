@@ -1,13 +1,14 @@
 package cli
 
 import (
-	"flag"
-	"io"
-	"fmt"
 	"bytes"
 	"errors"
-	log "github.com/behance/go-logrus"
+	"flag"
+	"fmt"
+	"io"
 	"os"
+
+	log "github.com/behance/go-logrus"
 )
 
 // RunsTopLevel - top level cli menuing structure
@@ -27,9 +28,10 @@ func (theRun *RunsTopLevel) Usage(writer io.Writer) {
 	  Call run <action> help for more on a sub-command
 	`)
 }
+
 // Parse - parse the top level `run <action>` menu
 //
-func (theRun *RunsTopLevel) Parse(args [] string) (exec CommandExec, err error) {
+func (theRun *RunsTopLevel) Parse(args []string) (exec CommandExec, err error) {
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -88,6 +90,7 @@ func (theRun *RunLs) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - parse flags
 //   - need a job-id
 //   - implements CommandParse
@@ -110,9 +113,10 @@ func (theRun *RunLs) Parse(args []string) (_ CommandExec, err error) {
 		return theRun, nil
 	}
 }
+
 // Execute the Metronome API
 func (theRun *RunLs) Execute(runtime *Runtime) (interface{}, error) {
-	return runtime.client.Runs(string(*theRun),0)
+	return runtime.client.Runs(string(*theRun), 0)
 }
 
 // RunStartJob - cli actuator to run POST /v1/jobs/$jobId/runs
@@ -126,6 +130,7 @@ func (theRun *RunStartJob) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - Parse the flags
 func (theRun *RunStartJob) Parse(args []string) (_ CommandExec, err error) {
 	flags := flag.NewFlagSet("run start", flag.ExitOnError)
@@ -146,6 +151,7 @@ func (theRun *RunStartJob) Parse(args []string) (_ CommandExec, err error) {
 		return theRun, nil
 	}
 }
+
 // Execute - the api against Metronome
 func (theRun *RunStartJob) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.StartJob(string(*theRun))
@@ -156,12 +162,14 @@ type RunStatusJob struct {
 	JobID
 	RunID
 }
+
 // FlagSet - set up flags to get the status
 func (theRun *RunStatusJob) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	theRun.JobID.FlagSet(flags)
 	theRun.RunID.FlagSet(flags)
 	return flags
 }
+
 // Validate - validate the flags
 func (theRun *RunStatusJob) Validate() error {
 	if err := theRun.JobID.Validate(); err != nil {
@@ -171,6 +179,7 @@ func (theRun *RunStatusJob) Validate() error {
 	}
 	return nil
 }
+
 // Usage - run status
 func (theRun *RunStatusJob) Usage(writer io.Writer) {
 	flags := flag.NewFlagSet("run status", flag.ExitOnError)
@@ -178,6 +187,7 @@ func (theRun *RunStatusJob) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - run-id,job-id
 // 	- status flags.
 //   	- panics returned as error
@@ -203,6 +213,7 @@ func (theRun *RunStatusJob) Parse(args []string) (_ CommandExec, err error) {
 		return theRun, nil
 	}
 }
+
 // Execute - executes the job status against metronome
 func (theRun *RunStatusJob) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.StatusJob(string(theRun.JobID), string(theRun.RunID))
@@ -221,6 +232,7 @@ func (theRun *RunStopJob) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - takes cli arguments and assures valid flags are passed to get stop a job (job-id,run-id)
 //   - uses RunStatusJob to process flags but uses itself as the CommandExecute implementation
 //   - Implements CommandParse & CommandExecut
@@ -244,6 +256,7 @@ func (theRun *RunStopJob) Parse(args []string) (_ CommandExec, err error) {
 	}
 	return theRun, nil
 }
+
 // Execute - executes POST /v1/jobs/$jobId/runs/$runId/action/stop
 func (theRun *RunStopJob) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.StopJob(string(theRun.JobID), string(theRun.RunID))

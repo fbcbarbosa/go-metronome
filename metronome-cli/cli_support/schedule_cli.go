@@ -2,12 +2,13 @@ package cli
 
 import "flag"
 import (
+	"bytes"
+	"errors"
+	"fmt"
+	"io"
+
 	met "github.com/adobe-platform/go-metronome/metronome"
 	log "github.com/behance/go-logrus"
-	"fmt"
-	"errors"
-	"bytes"
-	"io"
 )
 
 // Scheduling related cli support structures implementing CommandParse and CommandExecute to run Metronome scheduling related
@@ -19,10 +20,12 @@ type JobSched struct {
 	JobID
 	met.Schedule
 }
+
 // JobSchedRun - almost same as JobSched but with different Executor
 type JobSchedRun struct {
 	*JobSched
 }
+
 //
 // SchedTopLevel - top-level, cli menu for scheduling.  generally parses out action before instantiating specific, action relate CommandParse implementation
 //
@@ -30,6 +33,7 @@ type SchedTopLevel struct {
 	subcommand string
 	task       CommandParse
 }
+
 // Usage - schedule toplevel usage
 func (theSchedule *SchedTopLevel) Usage(writer io.Writer) {
 	fmt.Fprintf(writer, "schedule {create|delete|update|get|ls}  \n")
@@ -41,8 +45,9 @@ func (theSchedule *SchedTopLevel) Usage(writer io.Writer) {
 	  ls                 | Get all Schedules for a Job
 	`)
 }
+
 // Parse - parses out actions, delegates deeper parsing to action specific CommandParse implementations
-func (theSchedule *SchedTopLevel) Parse(args [] string) (exec CommandExec, err error) {
+func (theSchedule *SchedTopLevel) Parse(args []string) (exec CommandExec, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			buf := new(bytes.Buffer)
@@ -98,17 +103,20 @@ func (theSchedule *SchedTopLevel) Parse(args [] string) (exec CommandExec, err e
 	return exec, nil
 
 }
+
 // JobSchedBase -  collects parsing behavior needed in child classes
 type JobSchedBase struct {
 	JobID
 	SchedID
 }
+
 // FlagSet - general flags (job-id,schedule-id). Delegates flag creation to JobID, SchedID
 func (theSched *JobSchedBase) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	theSched.JobID.FlagSet(flags)
 	theSched.SchedID.FlagSet(flags)
 	return flags
 }
+
 // Validate - ensures we have valid schedule-id, job-id before returning executor
 func (theSched *JobSchedBase) Validate() error {
 	if err := theSched.JobID.Validate(); err != nil {
@@ -118,6 +126,7 @@ func (theSched *JobSchedBase) Validate() error {
 	}
 	return nil
 }
+
 // JobSchedGet - CommandParse/CommandExecutor for runnig metronome
 //    GET /v1/jobs/$jobId/schedules/$scheduleId
 //    thin type based on JobSchedBase
@@ -130,6 +139,7 @@ func (theSched *JobSchedGet) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - parses JobSchedBase params but returns self as executor.  Converts all panics into errors
 func (theSched *JobSchedGet) Parse(args []string) (_ CommandExec, err error) {
 	flags := flag.NewFlagSet("schedule get", flag.ExitOnError)
@@ -151,10 +161,12 @@ func (theSched *JobSchedGet) Parse(args []string) (_ CommandExec, err error) {
 		return theSched, nil
 	}
 }
+
 // Execute - Runs GET /v1/jobs/$jobId/schedules/$scheduleId
 func (theSched *JobSchedGet) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.GetSchedule(string(theSched.JobID), string(theSched.SchedID))
 }
+
 // JobSchedDelete - cli structure for executing Metronome API `DELETE /v1/jobs/$jobId/schedules/$scheduleId`
 type JobSchedDelete JobSchedBase
 
@@ -165,6 +177,7 @@ func (theSched *JobSchedDelete) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - parses cli flags using JobSchedBase but returns self as CommandExecution interface implementor
 func (theSched *JobSchedDelete) Parse(args []string) (_ CommandExec, err error) {
 	flags := flag.NewFlagSet("schedule delete", flag.ExitOnError)
@@ -186,10 +199,12 @@ func (theSched *JobSchedDelete) Parse(args []string) (_ CommandExec, err error) 
 		return theSched, nil
 	}
 }
+
 // Execute - runs GET /v1/jobs/$jobId/schedules/$scheduleId
 func (theSched *JobSchedDelete) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.DeleteSchedule(string(theSched.JobID), string(theSched.SchedID))
 }
+
 // JobScheduleList - cli structure to list a job's schedules -> GET /v1/jobs/$jobId/schedules
 type JobScheduleList JobID
 
@@ -201,8 +216,9 @@ func (theSched *JobScheduleList) Usage(writer io.Writer) {
 	flags.PrintDefaults()
 
 }
+
 // Parse - flags parsed as with JobID but returns self as CommandExecutor on success
-func (theSched *JobScheduleList) Parse(args [] string) (_ CommandExec, err error) {
+func (theSched *JobScheduleList) Parse(args []string) (_ CommandExec, err error) {
 	flags := flag.NewFlagSet("schedule ls", flag.ExitOnError)
 	(*JobID)(theSched).FlagSet(flags)
 	defer func() {
@@ -220,8 +236,9 @@ func (theSched *JobScheduleList) Parse(args [] string) (_ CommandExec, err error
 	} else {
 		return theSched, nil
 	}
-//	return theSched, nil
+	//	return theSched, nil
 }
+
 // Execute - implement CommandExec
 //  - Runs GET /v1/jobs/$jobId/schedules
 func (theSched *JobScheduleList) Execute(runtime *Runtime) (interface{}, error) {
@@ -239,8 +256,9 @@ func (theSched *JobScheduleCreate) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - parses flags per JobSched (job-id) but returns self as CommandExec with validation
-func (theSched *JobScheduleCreate) Parse(args [] string) (_ CommandExec, err error) {
+func (theSched *JobScheduleCreate) Parse(args []string) (_ CommandExec, err error) {
 	log.Debugf("JobScheduleCreate.parse args: %+v", args)
 	flags := flag.NewFlagSet("schedule create", flag.ExitOnError)
 	(*JobSched)(theSched).FlagSet(flags)
@@ -263,6 +281,7 @@ func (theSched *JobScheduleCreate) Parse(args [] string) (_ CommandExec, err err
 		return theSched, nil
 	}
 }
+
 // Execute  - implement CommandExec.  Executes POST /v1/jobs/$jobId/schedules
 func (theSched *JobScheduleCreate) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.CreateSchedule(string(theSched.JobID), &theSched.Schedule)
@@ -300,6 +319,7 @@ func (theSched *JobSchedUpdate) Parse(args []string) (_ CommandExec, err error) 
 		return theSched, nil
 	}
 }
+
 // Execute - executes PUT /v1/jobs/$jobId/schedules/$scheduleId
 func (theSched *JobSchedUpdate) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.UpdateSchedule(string(theSched.JobID), string(theSched.Schedule.ID), &theSched.Schedule)
@@ -316,6 +336,7 @@ func (theSched *JobSched) FlagSet(flags *flag.FlagSet) *flag.FlagSet {
 	flags.BoolVar(&theSched.Schedule.Enabled, "enabled", true, "Enable the schedule")
 	return flags
 }
+
 // Validate - validates that schedule and target
 func (theSched *JobSched) Validate() error {
 	if theSched.JobID == "" {
@@ -332,4 +353,3 @@ func (theSched *JobSched) Validate() error {
 
 	return nil
 }
-

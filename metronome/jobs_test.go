@@ -1,25 +1,26 @@
 package metronome_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
+
 	. "github.com/adobe-platform/go-metronome/metronome"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"strconv"
-	"time"
 )
 
 var _ = Describe("Jobs", func() {
 	var (
 		config_stub Config
-		client Metronome
+		client      Metronome
 		server      *ghttp.Server
-		sched Schedule
-		status JobStatus
+		sched       Schedule
+		status      JobStatus
 	)
 	// make a Schedule
 	buf := new(bytes.Buffer)
@@ -170,42 +171,40 @@ var _ = Describe("Jobs", func() {
 				Description: "Job with arguments",
 				Labels: &Labels{
 					"Location": "olympus",
-					"Owner": "zeus",
+					"Owner":    "zeus",
 				},
 				Run: &Run{
 					Artifacts: []Artifact{
-						Artifact{URI: "http://foo.test.com/application.zip", Extract: true, Executable :true, Cache: false},
+						Artifact{URI: "http://foo.test.com/application.zip", Extract: true, Executable: true, Cache: false},
 					},
 					Cmd: "nuke --dry --master local",
-					Args:[]string{
+					Args: []string{
 						"nuke",
 						"--dry",
 						"--master",
 						"local",
 					},
 					Cpus: 1.5,
-					Mem: 128,
+					Mem:  128,
 					Disk: 32,
-					Docker : &Docker{
+					Docker: &Docker{
 						Image: "foo/bla:test",
 					},
-					Env:  map[string]string{
-						"MON": "test",
+					Env: map[string]string{
+						"MON":     "test",
 						"CONNECT": "direct",
 					},
 					MaxLaunchDelay: 3600,
 					Placement: &Placement{
 						Constraints: []Constraint{
-							Constraint{Attribute: "rack", Operator: EQ, Value: "rack-2"} },
-
+							Constraint{Attribute: "rack", Operator: EQ, Value: "rack-2"}},
 					},
 					Restart: &Restart{
 						ActiveDeadlineSeconds: 120, Policy: "NEVER",
-
 					},
 					User: "root",
 					Volumes: []Volume{
-						Volume{Mode:RW, HostPath:"/etc/guest", ContainerPath: "/mnt/test" },
+						Volume{Mode: RW, HostPath: "/etc/guest", ContainerPath: "/mnt/test"},
 					},
 				},
 			}))
@@ -215,7 +214,7 @@ var _ = Describe("Jobs", func() {
 					ID: "job.without.arguments",
 					Labels: &Labels{
 						"Location": "olympus",
-						"Owner": "zeus",
+						"Owner":    "zeus",
 					},
 					Run: &Run{Cmd: "/usr/local/bin/dcos-tests --debug --term-wait 20 --http-addr :8095",
 						Cpus: 0.5,
@@ -223,19 +222,18 @@ var _ = Describe("Jobs", func() {
 						Docker: &Docker{
 							Image: "f4tq/dcos-tests:v0.31",
 						},
-						Env:   map[string]string{
-							"MON": "test",
+						Env: map[string]string{
+							"MON":     "test",
 							"CONNECT": "direct",
 						},
 						MaxLaunchDelay: 3600,
-						Mem: 32,
+						Mem:            32,
 						Restart: &Restart{
 							ActiveDeadlineSeconds: 120,
-							Policy: "NEVER",
+							Policy:                "NEVER",
 						},
 						User: "root",
 					},
-
 				}))
 
 		})
@@ -262,7 +260,7 @@ var _ = Describe("Jobs", func() {
 		})
 
 		It("Makes a request to get all jobs", func() {
-			result, err := client.Runs("foo.bar", time.Now().UnixNano() / int64(time.Millisecond) )
+			result, err := client.Runs("foo.bar", time.Now().UnixNano()/int64(time.Millisecond))
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(server.ReceivedRequests()).To(HaveLen(2))
 			fmt.Printf("%+v\n", result)
@@ -277,7 +275,7 @@ var _ = Describe("Jobs", func() {
 		BeforeEach(func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
-					ghttp.VerifyRequest("DELETE", "/v1/jobs/" + jobName),
+					ghttp.VerifyRequest("DELETE", "/v1/jobs/"+jobName),
 					ghttp.RespondWithJSONEncoded(http.StatusOK, allJobs[0]),
 				),
 			)
@@ -347,63 +345,63 @@ var _ = Describe("Jobs", func() {
 			)
 		})
 		/*
-				Describe("RunOnceNowJob", func() {
-					BeforeEach(func() {
-						server.AppendHandlers(
-							ghttp.CombineHandlers(
-								ghttp.VerifyRequest("POST", "/scheduler/iso8601"),
-								ghttp.VerifyJSON(`{"name":"","command":"","epsilon":"PT10M","schedule":"R1//PT2M"}`),
-								ghttp.RespondWith(http.StatusOK, nil),
-							),
-						)
-					})
-
-					It("Schedules a job to run once, and start immediately", func() {
-						job := Job{}
-						Expect(client.RunOnceNowJob(&job)).To(Succeed())
-						Expect(server.ReceivedRequests()).To(HaveLen(2))
-					})
+			Describe("RunOnceNowJob", func() {
+				BeforeEach(func() {
+					server.AppendHandlers(
+						ghttp.CombineHandlers(
+							ghttp.VerifyRequest("POST", "/scheduler/iso8601"),
+							ghttp.VerifyJSON(`{"name":"","command":"","epsilon":"PT10M","schedule":"R1//PT2M"}`),
+							ghttp.RespondWith(http.StatusOK, nil),
+						),
+					)
 				})
 
-				Describe("FormatSchedule", func() {
-					It("Returns a properly formatted time string", func() {
-						startTime := time.Date(2015, time.May, 26, 15, 0, 0, 0, time.UTC)
-						interval := "P10M"
-						reps := "R10"
-						expectedOutput := "R10/2015-05-26T15:00:00Z/P10M"
-
-						Expect(FormatSchedule(startTime, interval, reps)).To(Equal(expectedOutput))
-					})
-
-					It("Works with a zero time", func() {
-						startTime := *new(time.Time)
-						interval := "P10M"
-						reps := "R10"
-						expectedOutput := "R10//P10M"
-
-						Expect(FormatSchedule(startTime, interval, reps)).To(Equal(expectedOutput))
-					})
-
-					It("Errors if interval does not start with a P", func() {
-						startTime := new(time.Time)
-						interval := "10M"
-						reps := "R10"
-
-						schedule, err := FormatSchedule(*startTime, interval, reps)
-						Expect(schedule).To(Equal(""))
-						Expect(err).To(MatchError("Interval string not formatted correctly"))
-					})
-
-					It("Errors if reps do not start with R", func() {
-						startTime := new(time.Time)
-						interval := "P10M"
-						reps := "10"
-
-						schedule, err := FormatSchedule(*startTime, interval, reps)
-						Expect(schedule).To(Equal(""))
-						Expect(err).To(MatchError("Repetitions string not formatted correctly"))
-					})
+				It("Schedules a job to run once, and start immediately", func() {
+					job := Job{}
+					Expect(client.RunOnceNowJob(&job)).To(Succeed())
+					Expect(server.ReceivedRequests()).To(HaveLen(2))
 				})
+			})
+
+			Describe("FormatSchedule", func() {
+				It("Returns a properly formatted time string", func() {
+					startTime := time.Date(2015, time.May, 26, 15, 0, 0, 0, time.UTC)
+					interval := "P10M"
+					reps := "R10"
+					expectedOutput := "R10/2015-05-26T15:00:00Z/P10M"
+
+					Expect(FormatSchedule(startTime, interval, reps)).To(Equal(expectedOutput))
+				})
+
+				It("Works with a zero time", func() {
+					startTime := *new(time.Time)
+					interval := "P10M"
+					reps := "R10"
+					expectedOutput := "R10//P10M"
+
+					Expect(FormatSchedule(startTime, interval, reps)).To(Equal(expectedOutput))
+				})
+
+				It("Errors if interval does not start with a P", func() {
+					startTime := new(time.Time)
+					interval := "10M"
+					reps := "R10"
+
+					schedule, err := FormatSchedule(*startTime, interval, reps)
+					Expect(schedule).To(Equal(""))
+					Expect(err).To(MatchError("Interval string not formatted correctly"))
+				})
+
+				It("Errors if reps do not start with R", func() {
+					startTime := new(time.Time)
+					interval := "P10M"
+					reps := "10"
+
+					schedule, err := FormatSchedule(*startTime, interval, reps)
+					Expect(schedule).To(Equal(""))
+					Expect(err).To(MatchError("Repetitions string not formatted correctly"))
+				})
+			})
 		*/
 	})
 })

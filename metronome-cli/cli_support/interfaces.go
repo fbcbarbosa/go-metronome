@@ -1,4 +1,5 @@
 package cli
+
 import (
 	"io"
 )
@@ -8,9 +9,9 @@ import (
 type CommandExec interface {
 	Execute(runtime *Runtime) (interface{}, error)
 }
+
 // CommandParse - interface specifying command line processing
 type CommandParse interface {
 	Parse(args []string) (CommandExec, error)
 	Usage(writer io.Writer)
 }
-

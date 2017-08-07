@@ -2,11 +2,12 @@ package cli
 
 import (
 	"flag"
+	"fmt"
+	"io"
+	"strings"
+
 	met "github.com/adobe-platform/go-metronome/metronome"
 	log "github.com/behance/go-logrus"
-	"io"
-	"fmt"
-	"strings"
 )
 
 //Runtime represents the global options passed to all CommandExec.Execute methods.
@@ -27,7 +28,7 @@ type Runtime struct {
 //
 
 // FlagSet - Set up the flags
-func (runtime *Runtime) FlagSet(name  string) *flag.FlagSet {
+func (runtime *Runtime) FlagSet(name string) *flag.FlagSet {
 	flags := flag.NewFlagSet(name, flag.ExitOnError)
 	flags.StringVar(&runtime.httpAddr, "metronome-url", DefaultHTTPAddr, "Set the Metronome address")
 	flags.BoolVar(&runtime.Debug, "debug", false, "Turn on debug")
@@ -36,12 +37,14 @@ func (runtime *Runtime) FlagSet(name  string) *flag.FlagSet {
 	flags.StringVar(&runtime.pw, "password", "", "password")
 	return flags
 }
+
 // Usage - emit the usage
 func (runtime *Runtime) Usage(writer io.Writer) {
 	flags := runtime.FlagSet("<global options help>")
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - Process command line arguments
 func (runtime *Runtime) Parse(args []string) (CommandExec, error) {
 	flags := runtime.FlagSet("<global options> ")

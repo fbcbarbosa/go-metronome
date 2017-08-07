@@ -9,4 +9,3 @@ func In(val string, targ []string) bool {
 	}
 	return false
 }
-

@@ -1,13 +1,14 @@
 package cli
 
 import (
-	met "github.com/adobe-platform/go-metronome/metronome"
-	log "github.com/behance/go-logrus"
-	"fmt"
-	"strings"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
+
+	met "github.com/adobe-platform/go-metronome/metronome"
+	log "github.com/behance/go-logrus"
 )
 
 //
@@ -34,6 +35,7 @@ func (i *RunArgs) Set(value string) error {
 	*i = append(*i, value)
 	return nil
 }
+
 // type override to support parsing.  env alias' map[string]string
 // It implements flag.Value via Set/String
 
@@ -61,7 +63,7 @@ func (list *NvList) Set(value string) error {
 // ConstraintList - thin type providing Flags Value interface implementation for Metronome constraints
 //   type override to support parsing.  ConstraintList alias' []met.Constraint
 //   It implements flag.Value via Set/String
-type ConstraintList [] met.Constraint
+type ConstraintList []met.Constraint
 
 // String - Value interface implementation
 func (list *ConstraintList) String() string {
@@ -79,9 +81,8 @@ func (list *ConstraintList) Set(value string) error {
 
 }
 
-
 // VolumeList - thin type providing Flags Value interface implementation for Metronome volumes
-type VolumeList [] met.Volume
+type VolumeList []met.Volume
 
 // String - Value interface implementation
 func (list *VolumeList) String() string {
@@ -106,12 +107,13 @@ func (list *VolumeList) Set(value string) error {
 }
 
 // ArtifactList - thin type providing Flags Value interface implementation for Metronome artifacts
-type ArtifactList  []met.Artifact
+type ArtifactList []met.Artifact
 
 // String - Value interface implementation
 func (list *ArtifactList) String() string {
 	return fmt.Sprintf("%s", *list)
 }
+
 // Set - Value interface implemention
 func (list *ArtifactList) Set(value string) (err error) {
 	var arty met.Artifact
@@ -120,9 +122,9 @@ func (list *ArtifactList) Set(value string) (err error) {
 		log.Debugf("pairs : %+v", pairs)
 		kv := strings.SplitN(strings.TrimSpace(pairs), "=", 2)
 		log.Debugf("kv=%+v", kv)
-		switch strings.TrimSpace(kv[0]){
+		switch strings.TrimSpace(kv[0]) {
 		case "url", "uri":
-			ur, err := url.Parse(strings.TrimSpace(kv[1]));
+			ur, err := url.Parse(strings.TrimSpace(kv[1]))
 			if err != nil {
 				return err
 			}

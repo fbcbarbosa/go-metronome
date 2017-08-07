@@ -1,14 +1,15 @@
 package cli
 
 import (
-	met "github.com/adobe-platform/go-metronome/metronome"
-	log "github.com/behance/go-logrus"
-	"fmt"
-	"errors"
 	"bytes"
+	"errors"
+	"flag"
+	"fmt"
 	"io"
 	"os"
-	"flag"
+
+	met "github.com/adobe-platform/go-metronome/metronome"
+	log "github.com/behance/go-logrus"
 )
 
 //
@@ -37,8 +38,9 @@ func (theJob *JobTopLevel) Usage(writer io.Writer) {
 	`)
 
 }
+
 // Parse - parse top-level commands.
-func (theJob *JobTopLevel) Parse(args [] string) (exec CommandExec, err error) {
+func (theJob *JobTopLevel) Parse(args []string) (exec CommandExec, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			buf := new(bytes.Buffer)
@@ -57,7 +59,7 @@ func (theJob *JobTopLevel) Parse(args [] string) (exec CommandExec, err error) {
 	}
 	log.Debugf("JobTopLevel job args: %+v\n", args)
 	theJob.subcommand = args[0]
-	switch  theJob.subcommand{
+	switch theJob.subcommand {
 	case "create":
 		// POST /v1/jobs
 		x := CommandParse(new(JobCreateRuntime))
@@ -124,8 +126,8 @@ type JobCreateConfig struct {
 	user                  string
 	maxLaunchDelay        int
 	runNow                bool
-
 }
+
 // makeJob - construct a metronome job for the structure - usually populated via cli flags
 func (theJob *JobCreateConfig) makeJob() (*met.Job, error) {
 	var container *met.Docker
@@ -183,6 +185,7 @@ func (theJob *JobCreateConfig) makeJob() (*met.Job, error) {
 	return newJob, nil
 
 }
+
 // JobCreateRuntime - Entity used to create a metronome job
 //  Implements the CommandParse interface
 type JobCreateRuntime struct {
@@ -190,6 +193,7 @@ type JobCreateRuntime struct {
 	job           *met.Job
 	disableRunNow bool
 }
+
 // FlagSet - Flags to setup creating a job.
 //  - Populates JobCreateConfig with values
 //
@@ -237,6 +241,7 @@ func (theJob *JobCreateRuntime) Validate() error {
 	}
 	return nil
 }
+
 // Usage - dump flag usage
 func (theJob *JobCreateRuntime) Usage(writer io.Writer) {
 	flags := flag.NewFlagSet("job create", flag.ExitOnError)
@@ -250,6 +255,7 @@ func (theJob *JobCreateRuntime) Usage(writer io.Writer) {
 type JobRunNow struct {
 	job *met.Job
 }
+
 // Parse -
 func (theJob *JobCreateRuntime) Parse(args []string) (exec CommandExec, err error) {
 	log.Debugf("JobCreateRuntime.Parse %+v", args)
@@ -275,11 +281,12 @@ func (theJob *JobCreateRuntime) Parse(args []string) (exec CommandExec, err erro
 		return nil, err
 	}
 	if theJob.runNow {
-		return &JobRunNow{job:theJob.job}, nil
+		return &JobRunNow{job: theJob.job}, nil
 	}
 	return theJob, nil
 
 }
+
 // Execute - create and execute a job
 func (theJob *JobRunNow) Execute(runtime *Runtime) (interface{}, error) {
 	log.Debugf("JobCreateRuntime.Execute %+v", runtime)
@@ -332,6 +339,7 @@ func (theJob *JobDelete) Parse(args []string) (exec CommandExec, err error) {
 		return theJob, nil
 	}
 }
+
 // Execute - delete the job
 func (theJob *JobDelete) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.DeleteJob((string)(*theJob))
@@ -349,6 +357,7 @@ func (theJob *JobGet) Usage(writer io.Writer) {
 	flags.SetOutput(writer)
 	flags.PrintDefaults()
 }
+
 // Parse - the command line flags
 func (theJob *JobGet) Parse(args []string) (exec CommandExec, err error) {
 	flags := flag.NewFlagSet("job get", flag.ExitOnError)
@@ -369,6 +378,7 @@ func (theJob *JobGet) Parse(args []string) (exec CommandExec, err error) {
 		return theJob, nil
 	}
 }
+
 // Execute - get the job from metronome
 func (theJob *JobGet) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.GetJob(string(*theJob))
@@ -383,10 +393,12 @@ type JobList int
 func (theJob *JobList) Usage(writer io.Writer) {
 	fmt.Fprintf(writer, "job ls\n\tList all jobs\n")
 }
+
 // Parse - nothing to parse.  Implements CommandParse
-func (theJob *JobList) Parse([] string) (CommandExec, error) {
+func (theJob *JobList) Parse([]string) (CommandExec, error) {
 	return theJob, nil
 }
+
 // Execute - get the jobs from Metronome
 func (theJob *JobList) Execute(runtime *Runtime) (interface{}, error) {
 	jobs, err := runtime.client.Jobs()
@@ -396,6 +408,7 @@ func (theJob *JobList) Execute(runtime *Runtime) (interface{}, error) {
 	return jobs, nil
 
 }
+
 // JobUpdate - update a job via the command line
 //  - Implements CommandParse/CommandExecute
 // -  PUT /v1/jobs/$jobId
@@ -413,7 +426,7 @@ func (theJob *JobUpdate) Usage(writer io.Writer) {
 
 // Parse - implement CommandParse.
 //   Use underlying (actual) JobCreateRuntime
-func (theJob *JobUpdate) Parse(args [] string) (_ CommandExec, err error) {
+func (theJob *JobUpdate) Parse(args []string) (_ CommandExec, err error) {
 	theJob.disableRunNow = true
 	flags := flag.NewFlagSet("job update", flag.ExitOnError)
 	(*JobCreateRuntime)(theJob).FlagSet(flags)
@@ -438,6 +451,7 @@ func (theJob *JobUpdate) Parse(args [] string) (_ CommandExec, err error) {
 
 	}
 }
+
 // Execute - implement CommandExec
 func (theJob *JobUpdate) Execute(runtime *Runtime) (interface{}, error) {
 	return runtime.client.UpdateJob(string(theJob.JobID), theJob.job)
